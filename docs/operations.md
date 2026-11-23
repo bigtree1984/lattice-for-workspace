@@ -38,7 +38,7 @@ gcloud builds submit --project=<project> --region=<region> --config=../cloudbuil
 gcloud run deploy lattice --project=<project> --region=<region> --image=$T
 ```
 
-`gcloud run deploy` はイメージだけを替え、CPU 常時オンなどの設定は保ちます。Terraform はイメージの違いを無視するので、`terraform apply` と混ざっても戻りません。
+`gcloud run deploy` はイメージだけを替え、CPU 常時オンなどの設定は保ちます。ただし、3.4 で前の版に戻している間は、新しい版に利用者が流れません（3.4 の最後を見てください）。Terraform はイメージの違いを無視するので、`terraform apply` と混ざっても戻りません。
 
 ### 3.3 脆弱性の対応
 
@@ -54,7 +54,13 @@ gcloud run revisions list --service=lattice --project=<project> --region=<region
 gcloud run services update-traffic lattice --project=<project> --region=<region> --to-revisions=<戻したいリビジョン>=100
 ```
 
-戻したあとに次の版を載せると、新しい版に 100% が移ります。
+**戻している間は、新しい版を載せても利用者には届きません**（新しい版は 0% のまま。検証環境で確認）。直した版を載せたら、最新の版に戻します。
+
+```bash
+gcloud run services update-traffic lattice --project=<project> --region=<region> --to-latest
+```
+
+載せたあとは `gcloud run services describe lattice --project=<project> --region=<region> --format='value(status.traffic)'` で、`latestRevision: True` が 100% になっていることを確かめてください。
 
 ## 4. 費用を見る
 
@@ -78,7 +84,7 @@ Cloud Run の画面や `gcloud run services update` で直接変えると、次�
 
 | 鍵 | 替え方 | 影響 |
 |---|---|---|
-| セッションの鍵 | setup.md 4 章の2つめのコマンドで新しい版を足し、3.2 の `gcloud run deploy` で同じイメージを載せ直す | 全員が一度ログインし直す |
+| セッションの鍵 | setup.md 4 章の2つめのコマンドで新しい版を足し、3.2 の `gcloud run deploy` で同じイメージを載せ直す（アプリは起動のときに最新の版を読む）。確かめたら、古い版を `gcloud secrets versions disable <番号> --secret=lattice-session-key --project=<project>` で無効にする | 全員が一度ログインし直す（Google にログインしたままなら、画面が一瞬 Google を経由するだけ） |
 | OAuth クライアントの秘密 | コンソールでクライアントの秘密を新しく作り、JSON をシークレットの新しい版に入れて、載せ直す。古い秘密はコンソールで無効にする | 全員が一度ログインし直す |
 
 ## 7. Subject を片付ける
