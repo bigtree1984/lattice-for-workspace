@@ -16,6 +16,7 @@
 2. 仕組み: [docs/architecture.md](docs/architecture.md)（構成・権限・データの置き場所・環境変数）
 3. 会社で決めること: [docs/decisions.md](docs/decisions.md)
 4. セキュリティ: [SECURITY.md](SECURITY.md)
+5. 費用: [docs/cost.md](docs/cost.md)
 
 ## 手元で動かす（開発）
 
