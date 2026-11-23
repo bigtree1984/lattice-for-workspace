@@ -1,6 +1,91 @@
 {
  "version": 2,
+ "artifacts": [
+  {
+   "id": "login_req",
+   "label": "ログインの依頼"
+  },
+  {
+   "id": "token",
+   "label": "アクセストークン\n（1時間）"
+  },
+  {
+   "id": "key",
+   "label": "鍵",
+   "at": "secret"
+  },
+  {
+   "id": "facets",
+   "label": "L1・L2（いまの版）",
+   "at": "drive"
+  },
+  {
+   "id": "file",
+   "label": "資料（xlsx など）"
+  },
+  {
+   "id": "msg",
+   "label": "発言"
+  },
+  {
+   "id": "prompt",
+   "label": "発言＋資料＋L1・L2"
+  },
+  {
+   "id": "query",
+   "label": "検索語"
+  },
+  {
+   "id": "webres",
+   "label": "検索結果"
+  },
+  {
+   "id": "calc_req",
+   "label": "計算のコード"
+  },
+  {
+   "id": "calc_res",
+   "label": "計算の結果"
+  },
+  {
+   "id": "reply",
+   "label": "AI の返事"
+  },
+  {
+   "id": "work",
+   "label": "会話の記録"
+  },
+  {
+   "id": "summary",
+   "label": "要約"
+  },
+  {
+   "id": "drafts",
+   "label": "L1・L2 の下書き"
+  },
+  {
+   "id": "approval",
+   "label": "承認"
+  },
+  {
+   "id": "final",
+   "label": "L1・L2（確定版）"
+  },
+  {
+   "id": "manifest",
+   "label": "巻き戻しの目録"
+  },
+  {
+   "id": "compare",
+   "label": "新旧の見比べ"
+  },
+  {
+   "id": "sum_req",
+   "label": "要約の依頼"
+  }
+ ],
  "architecture": {
+  "layout": "hex",
   "columns": [
    {
     "id": "people",
@@ -16,12 +101,16 @@
     "width": 2
    },
    {
-    "id": "ai",
-    "label": "AI（Agent Platform）"
+    "id": "ws",
+    "label": "Google Workspace",
+    "width": 2,
+    "tier": "bottom"
    },
    {
-    "id": "ws",
-    "label": "Google Workspace"
+    "id": "ai",
+    "label": "AI（Agent Platform）",
+    "width": 2,
+    "tier": "bottom"
    }
   ],
   "nodes": [
@@ -29,465 +118,737 @@
     "id": "user",
     "label": "利用者\n（会社のアカウント）",
     "type": "human",
-    "group": "people"
+    "col": 0,
+    "row": 1
    },
    {
     "id": "chrome",
     "label": "Lattice の画面\n（Chrome）",
     "type": "frontend",
-    "group": "screen",
-    "icon": "googlechrome"
+    "icon": "googlechrome",
+    "col": 1,
+    "row": 1
    },
    {
     "id": "run",
     "label": "Cloud Run\nlattice",
     "type": "backend",
-    "group": "app",
-    "icon": "gcp-cloud-run"
+    "icon": "gcp-cloud-run",
+    "col": 2,
+    "row": 1
    },
    {
     "id": "firestore",
     "label": "Firestore\n作業の途中の状態",
     "type": "storage",
-    "group": "app",
-    "icon": "gcp-firestore"
+    "icon": "gcp-firestore",
+    "col": 2,
+    "row": 0
    },
    {
     "id": "secret",
     "label": "Secret Manager\nOAuth・鍵",
     "type": "storage",
-    "group": "app",
-    "icon": "gcp-secret-manager"
+    "icon": "gcp-secret-manager",
+    "col": 3,
+    "row": 1
    },
    {
     "id": "logging",
     "label": "Cloud Logging",
     "type": "storage",
-    "group": "app",
-    "icon": "gcp-cloud-logging"
+    "icon": "gcp-cloud-logging",
+    "col": 3,
+    "row": 0
    },
    {
     "id": "gemini",
     "label": "Gemini\n（global）",
     "type": "agent",
-    "group": "ai",
-    "icon": "gcp-vertexai"
+    "icon": "gcp-vertexai",
+    "col": 2,
+    "row": 2
    },
    {
     "id": "websearch",
     "label": "Web Grounding\nfor Enterprise",
     "type": "backend",
-    "group": "ai"
+    "col": 2,
+    "row": 3
    },
    {
     "id": "sandbox",
     "label": "サンドボックス\n（計算・遮断）",
     "type": "backend",
-    "group": "ai"
+    "col": 3,
+    "row": 2
    },
    {
     "id": "login",
     "label": "Google ログイン\n（OAuth・内部）",
     "type": "backend",
-    "group": "ws",
-    "icon": "google"
+    "icon": "google",
+    "col": 0,
+    "row": 2
    },
    {
     "id": "drive",
     "label": "共有ドライブ\nSubject の .md",
     "type": "storage",
-    "group": "ws"
+    "col": 1,
+    "row": 2
    }
   ],
   "edges": [
    {
+    "label": "操作",
+    "bidirectional": true,
     "from": "user",
-    "to": "chrome",
-    "label": "操作"
+    "to": "chrome"
    },
    {
-    "from": "chrome",
-    "to": "run",
     "label": "画面と API",
-    "bidirectional": true
-   },
-   {
+    "bidirectional": true,
     "from": "chrome",
-    "to": "login",
+    "to": "run"
+   },
+   {
     "label": "ログイン",
-    "bidirectional": true
+    "bidirectional": true,
+    "from": "chrome",
+    "to": "login"
    },
    {
+    "label": "鍵を読む",
+    "bidirectional": true,
     "from": "run",
-    "to": "secret",
-    "label": "鍵を読む"
+    "to": "secret"
    },
    {
-    "from": "run",
-    "to": "firestore",
     "label": "途中の状態",
-    "bidirectional": true
+    "bidirectional": true,
+    "from": "run",
+    "to": "firestore"
    },
    {
+    "label": "ログ",
     "from": "run",
-    "to": "logging",
-    "label": "ログ"
+    "to": "logging"
    },
    {
-    "from": "run",
-    "to": "drive",
     "label": "本人の権限で読み書き",
-    "bidirectional": true
+    "bidirectional": true,
+    "from": "run",
+    "to": "drive"
    },
    {
-    "from": "run",
-    "to": "gemini",
     "label": "会話・下書き",
-    "bidirectional": true
-   },
-   {
-    "from": "gemini",
-    "to": "websearch",
-    "label": "Web 検索",
-    "bidirectional": true
-   },
-   {
+    "bidirectional": true,
     "from": "run",
-    "to": "sandbox",
+    "to": "gemini"
+   },
+   {
+    "label": "Web 検索",
+    "bidirectional": true,
+    "from": "gemini",
+    "to": "websearch"
+   },
+   {
     "label": "計算",
-    "bidirectional": true
+    "bidirectional": true,
+    "from": "run",
+    "to": "sandbox"
    }
-  ]
+  ],
+  "split": 2
  },
- "artifacts": [
-  {
-   "id": "login_req",
-   "label": "ログインの依頼",
-   "transient": true
-  },
-  {
-   "id": "token",
-   "label": "アクセストークン\n（1時間）"
-  },
-  {
-   "id": "facets",
-   "label": "L1・L2（いまの版）",
-   "at": "drive"
-  },
-  {
-   "id": "msg",
-   "label": "発言"
-  },
-  {
-   "id": "prompt",
-   "label": "発言＋読んだファイル"
-  },
-  {
-   "id": "reply",
-   "label": "AI の返事"
-  },
-  {
-   "id": "work",
-   "label": "会話の記録"
-  },
-  {
-   "id": "summary",
-   "label": "要約と Facet の候補"
-  },
-  {
-   "id": "drafts",
-   "label": "L1・L2 の下書き"
-  },
-  {
-   "id": "approval",
-   "label": "承認",
-   "transient": true
-  },
-  {
-   "id": "final",
-   "label": "L1・L2（確定版）"
-  },
-  {
-   "id": "manifest",
-   "label": "巻き戻しの目録"
-  }
- ],
  "flow": {
   "tasks": [
    {
     "id": "t1",
-    "label": "ログインする",
-    "description": "会社の Google アカウントでログインする。アプリはドメインを確かめ、1時間のアクセストークンを暗号化した Cookie に入れる（サーバーには保存しない）。",
+    "label": "ログインを始める",
+    "description": "会社のアカウントでログインする。",
     "mainNode": "user",
     "inputNodes": [],
-    "outputNodes": [],
+    "outputNodes": [
+     "chrome"
+    ],
     "actions": [
      {
-      "type": "create",
       "results": [
        "login_req"
       ],
-      "label": "会社のアカウントでログイン"
+      "label": "会社のアカウントでログイン",
+      "type": "create"
      },
      {
-      "type": "send",
       "artifacts": [
        "login_req"
       ],
-      "to": "login"
+      "to": "chrome",
+      "type": "send"
      }
     ]
    },
    {
     "id": "t2",
-    "label": "トークンを受け取る",
-    "description": "Google が本人を確かめ、ドライブを読み書きできるアクセストークンを返す。Lattice はそれを暗号化した Cookie として画面に持たせる。",
+    "label": "Google で本人を確かめる",
+    "description": "Google が本人を確かめ、1時間のトークンを渡す。",
     "mainNode": "chrome",
-    "inputNodes": [],
-    "outputNodes": [],
+    "inputNodes": [
+     "login"
+    ],
+    "outputNodes": [
+     "login"
+    ],
     "actions": [
      {
-      "type": "receive",
+      "artifacts": [
+       "login_req"
+      ],
+      "to": "login",
+      "type": "send"
+     },
+     {
       "artifacts": [
        "token"
       ],
       "from": "login",
-      "label": "Google からトークンを受け取る"
+      "label": "トークンを受け取る",
+      "type": "receive"
      }
     ]
    },
    {
     "id": "t3",
-    "label": "発言する",
-    "description": "利用者が Discussion で発言する。トークンと一緒に Cloud Run に届く。",
+    "label": "発言と資料を出す",
+    "description": "発言して、資料を添付する。",
     "mainNode": "user",
     "inputNodes": [],
-    "outputNodes": [],
+    "outputNodes": [
+     "chrome"
+    ],
     "actions": [
      {
-      "type": "create",
       "results": [
        "msg"
-      ]
+      ],
+      "type": "create"
      },
      {
-      "type": "send",
-      "artifacts": [
-       "msg"
+      "results": [
+       "file"
       ],
-      "to": "run"
+      "label": "資料を添付",
+      "type": "create"
+     },
+     {
+      "artifacts": [
+       "msg",
+       "file"
+      ],
+      "to": "chrome",
+      "type": "send"
      }
     ]
    },
    {
     "id": "t4",
-    "label": "AI が返事を作る",
-    "description": "Cloud Run が裏のスレッドで、関係する L1・L2 を利用者の権限でドライブから読み、発言と一緒に Gemini に渡す。必要なら Web 検索や計算も使う。会話の記録は Firestore に置く。",
-    "mainNode": "run",
+    "label": "画面から送る",
+    "description": "トークンを添えて送る。",
+    "mainNode": "chrome",
     "inputNodes": [],
-    "outputNodes": [],
+    "outputNodes": [
+     "run"
+    ],
     "actions": [
      {
-      "type": "receive",
       "artifacts": [
-       "facets"
+       "msg",
+       "file"
       ],
-      "from": "drive",
+      "to": "run",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "token"
+      ],
+      "to": "run",
       "keep": true,
-      "label": "利用者の権限で L1・L2 を読む"
-     },
-     {
-      "type": "transform",
-      "artifacts": [
-       "msg"
-      ],
-      "results": [
-       "prompt"
-      ],
-      "label": "発言と読んだファイルをまとめる"
-     },
-     {
-      "type": "send",
-      "artifacts": [
-       "prompt"
-      ],
-      "to": "gemini"
-     },
-     {
-      "type": "receive",
-      "artifacts": [
-       "reply"
-      ],
-      "from": "gemini"
-     },
-     {
-      "type": "create",
-      "results": [
-       "work"
-      ],
-      "label": "会話の記録を作る"
-     },
-     {
-      "type": "send",
-      "artifacts": [
-       "work"
-      ],
-      "to": "firestore"
-     },
-     {
-      "type": "send",
-      "artifacts": [
-       "reply"
-      ],
-      "to": "chrome",
-      "label": "返事を画面に出す"
+      "label": "トークンを添える（サーバーには残らない）",
+      "type": "send"
      }
     ]
    },
    {
     "id": "t5",
-    "label": "要約と下書き",
-    "description": "要約を作り、更新する Facet を選んで「確認する」を押すと、AI が要約と L1・L2 の下書きを書き、ドライブに置く。",
+    "label": "AI に渡す材料をそろえる",
+    "description": "本人の権限でドライブを読み、AI に渡す。",
     "mainNode": "run",
-    "inputNodes": [],
-    "outputNodes": [],
+    "inputNodes": [
+     "secret",
+     "drive"
+    ],
+    "outputNodes": [
+     "drive",
+     "gemini"
+    ],
     "actions": [
      {
-      "type": "receive",
       "artifacts": [
-       "work"
+       "key"
       ],
-      "from": "firestore",
+      "from": "secret",
       "keep": true,
-      "label": "会話の記録を読む"
+      "label": "鍵を読む",
+      "type": "receive"
      },
      {
-      "type": "receive",
       "artifacts": [
-       "summary"
-      ],
-      "from": "gemini",
-      "label": "Gemini が要約を書く"
-     },
-     {
-      "type": "receive",
-      "artifacts": [
-       "drafts"
-      ],
-      "from": "gemini",
-      "label": "Gemini が下書きを書く"
-     },
-     {
-      "type": "send",
-      "artifacts": [
-       "summary",
-       "drafts"
+       "file"
       ],
       "to": "drive",
-      "label": "要約と下書きをドライブに置く"
+      "keep": true,
+      "label": "本人の権限で資料を置く",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "facets"
+      ],
+      "from": "drive",
+      "keep": true,
+      "label": "本人の権限で L1・L2 を読む",
+      "type": "receive"
+     },
+     {
+      "artifacts": [
+       "msg",
+       "file",
+       "facets"
+      ],
+      "results": [
+       "prompt"
+      ],
+      "label": "発言・資料・L1・L2 をまとめる",
+      "type": "derive"
+     },
+     {
+      "artifacts": [
+       "prompt"
+      ],
+      "to": "gemini",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "msg",
+       "file"
+      ],
+      "label": "手元の写しを片付ける",
+      "type": "discard"
      }
     ]
    },
    {
     "id": "t6",
-    "label": "新旧を見比べて承認",
-    "description": "利用者が、いまの版と下書きを並べて見る。直したければ直し、Facet ごとに承認か取り下げを選んで確定する。",
-    "mainNode": "user",
-    "inputNodes": [],
-    "outputNodes": [],
+    "label": "Web で調べる",
+    "description": "必要なら Web を調べる。",
+    "mainNode": "gemini",
+    "inputNodes": [
+     "websearch"
+    ],
+    "outputNodes": [
+     "websearch"
+    ],
     "actions": [
      {
-      "type": "receive",
-      "artifacts": [
-       "drafts"
-      ],
-      "from": "drive",
-      "keep": true,
-      "label": "新旧を並べて見る"
-     },
-     {
-      "type": "inspect",
-      "artifacts": [
-       "drafts"
-      ],
-      "label": "承認か取り下げを選ぶ"
-     },
-     {
-      "type": "create",
       "results": [
-       "approval"
-      ]
+       "query"
+      ],
+      "type": "create"
      },
      {
-      "type": "send",
       "artifacts": [
-       "approval"
+       "query"
       ],
-      "to": "run"
+      "to": "websearch",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "webres"
+      ],
+      "from": "websearch",
+      "type": "receive"
      }
     ]
    },
    {
     "id": "t7",
-    "label": "確定する",
-    "description": "下書きを確定版にし、log.md に記録し、巻き戻し用の目録（ファイルの ID と版の番号だけ）を書く。会話の記録は Firestore から消す。",
+    "label": "計算する",
+    "description": "遮断された部屋で計算する。",
     "mainNode": "run",
-    "inputNodes": [],
-    "outputNodes": [],
+    "inputNodes": [
+     "sandbox"
+    ],
+    "outputNodes": [
+     "sandbox",
+     "gemini"
+    ],
     "actions": [
      {
-      "type": "receive",
-      "artifacts": [
-       "drafts"
+      "results": [
+       "calc_req"
       ],
-      "from": "drive",
-      "label": "下書きを読む"
+      "label": "Gemini が書いたコード",
+      "type": "create"
      },
      {
-      "type": "transform",
       "artifacts": [
-       "drafts"
+       "calc_req"
+      ],
+      "to": "sandbox",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "calc_res"
+      ],
+      "from": "sandbox",
+      "type": "receive"
+     },
+     {
+      "artifacts": [
+       "calc_res"
+      ],
+      "to": "gemini",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t8",
+    "label": "返事を書く",
+    "description": "返事を書く。",
+    "mainNode": "gemini",
+    "inputNodes": [],
+    "outputNodes": [
+     "run"
+    ],
+    "actions": [
+     {
+      "artifacts": [
+       "prompt",
+       "webres",
+       "calc_res"
       ],
       "results": [
-       "final"
+       "reply"
       ],
-      "label": "確定版にする"
+      "type": "transform"
      },
      {
-      "type": "send",
       "artifacts": [
-       "final"
+       "reply"
       ],
-      "to": "drive"
-     },
+      "to": "run",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t9",
+    "label": "返事を画面に出す",
+    "description": "会話を記録して、返事を出す。",
+    "mainNode": "run",
+    "inputNodes": [],
+    "outputNodes": [
+     "firestore",
+     "chrome"
+    ],
+    "actions": [
      {
-      "type": "create",
       "results": [
-       "manifest"
+       "work"
       ],
-      "label": "巻き戻しの目録を作る"
+      "label": "会話の記録を作る",
+      "type": "create"
      },
      {
-      "type": "send",
       "artifacts": [
-       "manifest"
+       "work"
       ],
-      "to": "drive"
+      "to": "firestore",
+      "type": "send"
      },
      {
-      "type": "receive",
+      "artifacts": [
+       "reply"
+      ],
+      "to": "chrome",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t10",
+    "label": "要約と下書きを頼む",
+    "description": "要約と下書きを頼む。",
+    "mainNode": "run",
+    "inputNodes": [
+     "firestore"
+    ],
+    "outputNodes": [
+     "gemini"
+    ],
+    "actions": [
+     {
       "artifacts": [
        "work"
       ],
       "from": "firestore",
-      "label": "会話の記録を引き取る"
+      "keep": true,
+      "label": "会話の記録を読む",
+      "type": "receive"
      },
      {
-      "type": "discard",
       "artifacts": [
        "work"
       ],
-      "label": "会話の記録を消す"
+      "results": [
+       "sum_req"
+      ],
+      "label": "要約の依頼を作る",
+      "type": "derive"
+     },
+     {
+      "artifacts": [
+       "sum_req"
+      ],
+      "to": "gemini",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t11",
+    "label": "要約と下書きを書く",
+    "description": "要約と下書きを書く。",
+    "mainNode": "gemini",
+    "inputNodes": [],
+    "outputNodes": [
+     "run"
+    ],
+    "actions": [
+     {
+      "artifacts": [
+       "sum_req"
+      ],
+      "results": [
+       "summary",
+       "drafts"
+      ],
+      "type": "transform"
+     },
+     {
+      "artifacts": [
+       "summary",
+       "drafts"
+      ],
+      "to": "run",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t12",
+    "label": "下書きを見せる",
+    "description": "新旧を並べて見せる。",
+    "mainNode": "run",
+    "inputNodes": [],
+    "outputNodes": [
+     "drive",
+     "chrome"
+    ],
+    "actions": [
+     {
+      "artifacts": [
+       "summary"
+      ],
+      "to": "drive",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "drafts"
+      ],
+      "results": [
+       "compare"
+      ],
+      "label": "いまの版と並べる",
+      "type": "derive"
+     },
+     {
+      "artifacts": [
+       "drafts"
+      ],
+      "to": "drive",
+      "label": "下書きを置く",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "compare"
+      ],
+      "to": "chrome",
+      "label": "新旧を並べて見せる",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t13",
+    "label": "新旧を見比べて承認する",
+    "description": "見比べて承認する。",
+    "mainNode": "user",
+    "inputNodes": [
+     "chrome"
+    ],
+    "outputNodes": [
+     "chrome"
+    ],
+    "actions": [
+     {
+      "artifacts": [
+       "compare"
+      ],
+      "from": "chrome",
+      "type": "receive"
+     },
+     {
+      "artifacts": [
+       "compare"
+      ],
+      "label": "新旧を見比べる",
+      "type": "inspect"
+     },
+     {
+      "artifacts": [
+       "compare"
+      ],
+      "type": "discard"
+     },
+     {
+      "results": [
+       "approval"
+      ],
+      "type": "create"
+     },
+     {
+      "artifacts": [
+       "approval"
+      ],
+      "to": "chrome",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t14",
+    "label": "承認を送る",
+    "description": "承認を送る。",
+    "mainNode": "chrome",
+    "inputNodes": [],
+    "outputNodes": [
+     "run"
+    ],
+    "actions": [
+     {
+      "artifacts": [
+       "approval"
+      ],
+      "to": "run",
+      "type": "send"
+     }
+    ]
+   },
+   {
+    "id": "t15",
+    "label": "確定する",
+    "description": "確定版にして、会話の記録を消す。",
+    "mainNode": "run",
+    "inputNodes": [
+     "drive",
+     "firestore"
+    ],
+    "outputNodes": [
+     "drive"
+    ],
+    "actions": [
+     {
+      "artifacts": [
+       "approval"
+      ],
+      "label": "承認を受けて確定へ",
+      "type": "discard"
+     },
+     {
+      "artifacts": [
+       "facets",
+       "drafts"
+      ],
+      "from": "drive",
+      "label": "いまの版と下書きを読む",
+      "type": "receive"
+     },
+     {
+      "artifacts": [
+       "facets",
+       "drafts"
+      ],
+      "results": [
+       "final"
+      ],
+      "label": "確定版にする",
+      "type": "transform"
+     },
+     {
+      "artifacts": [
+       "final"
+      ],
+      "to": "drive",
+      "type": "send"
+     },
+     {
+      "results": [
+       "manifest"
+      ],
+      "label": "巻き戻しの目録を作る",
+      "type": "create"
+     },
+     {
+      "artifacts": [
+       "manifest"
+      ],
+      "to": "drive",
+      "type": "send"
+     },
+     {
+      "artifacts": [
+       "work"
+      ],
+      "from": "firestore",
+      "label": "会話の記録を引き取る",
+      "type": "receive"
+     },
+     {
+      "artifacts": [
+       "work"
+      ],
+      "label": "会話の記録を消す",
+      "type": "discard"
      }
     ]
    }
@@ -516,6 +877,38 @@
    {
     "from": "t6",
     "to": "t7"
+   },
+   {
+    "from": "t7",
+    "to": "t8"
+   },
+   {
+    "from": "t8",
+    "to": "t9"
+   },
+   {
+    "from": "t9",
+    "to": "t10"
+   },
+   {
+    "from": "t10",
+    "to": "t11"
+   },
+   {
+    "from": "t11",
+    "to": "t12"
+   },
+   {
+    "from": "t12",
+    "to": "t13"
+   },
+   {
+    "from": "t13",
+    "to": "t14"
+   },
+   {
+    "from": "t14",
+    "to": "t15"
    }
   ]
  }
