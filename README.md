@@ -37,7 +37,7 @@ LATTICE_DEV_USER=you@example.com .venv/bin/uvicorn app.main:app --port 8000
 
 ## 見本のデータ
 
-`examples/sample_waterless/` は、AI の計算機能を試すための架空のデータ（アンケート・原価・使用テスト・競合）です。
+`examples/ai_tutor/` は、AI の計算機能を試すための架空のデータです（生成AIの家庭教師サービスの価格を考える: アンケート・原価・競合）。
 
 ## ライセンス
 
