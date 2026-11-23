@@ -72,7 +72,7 @@ Lattice を会社に入れるときに、情報システム部門が確かめる
 | Web 検索 | Web Grounding for Enterprise を使う（一般の Google 検索のグラウンディングは使わない） | 対応済み |
 | 処理する地域 | Gemini は global のエンドポイント（最新のモデルが地域を選べないため）。Firestore・Cloud Run は東京 | 会社で判断 |
 | サンドボックス | us-central1（東京は未対応）。Discussion の間だけ残し、確定・廃棄で消す。消し忘れても3日で消える | 会社で判断 |
-| Firestore の会話の記録 | 確定・廃棄で消える。Subject を共有ドライブでゴミ箱に移しても、Firestore の状態は残る（手で消す） | 未対応（運用） |
+| Firestore の会話の記録 | 確定・廃棄で消える。Subject を共有ドライブでゴミ箱に移しても、Firestore の状態は残る。`scripts/cleanup_state.py` で消す（運用手順書 7 章） | 運用で対応 |
 | 共有ドライブのゴミ箱 | 巻き戻しなどで外したファイルはゴミ箱に約30日残る | ― |
 
 ## 7. 直して出し直す

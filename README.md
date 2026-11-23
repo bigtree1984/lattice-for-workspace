@@ -12,11 +12,12 @@
 このリポジトリは **「Use this template」で自社の非公開リポジトリにコピー**して使うことをおすすめします
 （Fork すると公開のままになり、自社の設定を入れにくいため）。
 
-1. 立てる: [terraform/README.md](terraform/README.md)（Terraform と手作業の手順）
-2. 仕組み: [docs/architecture.md](docs/architecture.md)（構成・権限・データの置き場所・環境変数）
-3. 会社で決めること: [docs/decisions.md](docs/decisions.md)
-4. セキュリティ: [SECURITY.md](SECURITY.md)
-5. 費用: [docs/cost.md](docs/cost.md)
+1. 立てる: [docs/setup.md](docs/setup.md)（構築手順書）
+2. 動かし続ける: [docs/operations.md](docs/operations.md)（運用手順書）
+3. 仕組み: [docs/architecture.md](docs/architecture.md)（構成・権限・データの置き場所・環境変数）
+4. 会社で決めること: [docs/decisions.md](docs/decisions.md)
+5. セキュリティ: [SECURITY.md](SECURITY.md)
+6. 費用: [docs/cost.md](docs/cost.md)
 
 ## 手元で動かす（開発）
 

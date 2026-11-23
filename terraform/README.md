@@ -1,5 +1,7 @@
 # Lattice を立てる（Terraform と手作業）
 
+詳しい手順・確認・うまくいかないときは [docs/setup.md](../docs/setup.md) を見てください。ここは要点だけです。
+
 Terraform は GCP の土台（API、イメージ置き場、Firestore、サービスアカウントと権限、シークレットの入れ物、Cloud Run）を作ります。
 次のものは Terraform では作れないので、手作業です（★）。
 
