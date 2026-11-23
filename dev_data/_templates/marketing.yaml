@@ -1,0 +1,67 @@
+label: マーケティング
+description: マーケティング戦略キャンバスの基本の Facet（競合は含まない）
+groups:
+- id: market
+  label: 市場環境
+  groups:
+  - id: pest
+    label: PEST
+    facets:
+    - id: pest-political
+      label: Political
+    - id: pest-economic
+      label: Economic
+    - id: pest-society
+      label: Society
+    - id: pest-technology
+      label: Technology
+  - id: five-forces
+    label: 5F
+    facets:
+    - id: five-forces
+      label: 5F
+  - id: swot
+    label: SWOT
+    facets:
+    - id: swot
+      label: SWOT
+- id: strategy
+  label: 戦略
+  groups:
+  - id: stp
+    label: STP
+    facets:
+    - id: stp
+      label: STP
+  - id: mvv
+    label: MVV
+    facets:
+    - id: mvv
+      label: MVV
+- id: customer
+  label: 顧客
+  groups:
+  - id: persona
+    label: ペルソナ
+    facets:
+    - id: persona
+      label: ペルソナ
+  - id: journey
+    label: カスタマージャーニー
+    facets:
+    - id: journey
+      label: カスタマージャーニー
+- id: execution
+  label: 実行
+  groups:
+  - id: 4p
+    label: 4P（自社）
+    facets:
+    - id: product
+      label: Product
+    - id: price
+      label: Price
+    - id: place
+      label: Place
+    - id: promotion
+      label: Promotion

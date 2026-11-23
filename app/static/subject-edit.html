@@ -1,0 +1,301 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>Subject の編集 — Lattice</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+/* Subject を作る・Facet の構成を直す（REQUIREMENTS D-5） */
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.6 sans-serif;color:var(--color-ink);background:var(--color-surface)}
+header{padding:20px 16px;background:var(--gem-pale);border-bottom:2px solid transparent;border-image:var(--gem) 1}
+header .in,main{max-width:860px;margin:0 auto}
+header a{color:var(--color-contrast-a);text-decoration:none;font-size:12px}
+header h1{font-size:20px;margin:4px 0 0}
+main{padding:16px}
+section{background:var(--color-base);border:1px solid #d5dbe3;padding:14px 16px;margin-bottom:14px}
+section h2{font-size:14px;margin:0 0 10px}
+label.f{display:block;margin:0 0 10px}label.f span{display:block;font-size:12px;color:var(--color-muted)}
+input[type=text],textarea,select{font:inherit;border:1px solid #b8c1cc;padding:5px 7px;width:100%;background:#fff}
+input[readonly]{background:var(--color-surface);color:var(--color-muted)}
+textarea{min-height:52px}
+.muted{color:var(--color-muted);font-size:12px}
+button{font:inherit;font-size:13px;border:1px solid var(--color-muted);background:#fff;padding:3px 10px;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+button.primary{background:var(--color-contrast-a);border-color:var(--color-contrast-a);color:#fff;padding:7px 18px}
+.row{display:flex;gap:8px;align-items:center}
+.group{border:1px solid #c9d1db;border-top:3px solid var(--color-contrast-a);padding:10px;margin:10px 0}
+.sub{border-left:3px solid var(--color-contrast-b);padding:6px 0 6px 10px;margin:8px 0 8px 6px}
+.facet{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;align-items:center;margin:4px 0 4px 10px}
+.facet.dep input{text-decoration:line-through}
+.name{flex:2}.id{flex:1}.tools{display:flex;gap:4px;flex:none}
+.tools button{padding:1px 7px}
+.adds{display:flex;gap:6px;margin:6px 0 0 10px}
+.err{color:#b3261e;margin:8px 0;white-space:pre-wrap}
+.preview{font-size:13px;white-space:pre-wrap;background:var(--color-surface);padding:10px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.card{border:1px solid #c9d1db;padding:12px;cursor:pointer;background:#fff;text-align:left;font:inherit}
+.card b{display:block;font-size:15px;margin-bottom:4px}.card span{font-size:12px;color:var(--color-muted)}
+.card.on{border:2px solid var(--color-contrast-a);background:var(--gem-pale)}
+.opts{border-left:3px solid var(--color-contrast-a);padding:4px 0 4px 12px}
+.how .opt{display:block;margin:6px 0}.how .opt small{display:block;color:var(--color-muted);margin-left:22px}
+.grip{cursor:grab;color:var(--color-muted);padding:0 4px;user-select:none;flex:none}
+.dragging{opacity:.4}.drop-before{box-shadow:0 -3px 0 var(--color-contrast-a)}.drop-after{box-shadow:0 3px 0 var(--color-contrast-a)}.drop-in{outline:2px dashed var(--color-contrast-a)}
+@media (max-width:640px){.cards{grid-template-columns:1fr}}
+.how label{display:block;margin:4px 0}.how select{width:auto;max-width:100%;margin-left:6px}.how .q{font-weight:bold;margin:8px 0 2px}
+.foot{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+@media (max-width:640px){.facet{grid-template-columns:1fr}.row{flex-wrap:wrap}}
+</style></head><body>
+<header><div class="in"><a href="subjects.html">← Subject の一覧へ</a><h1 id="h"></h1></div></header>
+<main>
+<p id="loading"></p>
+<section id="how" class="how" hidden></section>
+<section id="basic" hidden></section>
+<section hidden><h2>Facet の構成</h2>
+  <div class="row" id="tplrow"><select id="tpl"></select><button id="load">雛形を読み込む</button></div>
+  <p class="muted" id="howto">グループ → 小グループ → Facet の2段です。ID はフォルダ名とリンクに使う英小文字・数字・ハイフンの名前で、名前から案を出します（直せます）。<span id="edithint"></span></p>
+  <div id="tree"></div>
+  <div class="adds" id="addgroup"><button data-add="group">＋ グループ</button></div>
+</section>
+<section hidden><h2>最終確認</h2><div class="preview" id="preview"></div><div class="err" id="err"></div>
+  <div class="foot"><span class="muted" id="count"></span><button class="primary" id="go"></button></div></section>
+</main>
+<script src="auth.js"></script>
+<script src="dialog.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const S=new URLSearchParams(location.search).get('s');  // あれば「始めたあとの編集」
+// 入口は1つ（E-4）: 構成をどこから持ってくるか × 中身をどうするか。?from=X は「X を複製して続ける」の近道
+const Q=new URLSearchParams(location.search);
+// 画面では「① 既存を引き継ぐ（同じ Facet／組み直して移す）」「② 一から（自分で／既存の構成／雛形）」と聞き、
+// 中では SRC（構成の出どころ）と CONTENT（中身）に置き換える
+let PATH=Q.get('from')?'inherit':'',PICK=Q.get('from')?'same':'',SRCSUB=Q.get('from')||'',TPLID='',SUBJ=[];
+let SRC='empty',CONTENT='empty';
+let FROM=null;  // 複製して続けるときの元の Subject（E-1）
+// 元の Subject の名前から案を作る。末尾の年に1を足す（年が無ければ今年を付ける）。同じ名前があれば、空いている次の年にする
+function nextName(n){const m=String(n).match(/^(.*?)_(\d{4})$/),base=(m?m[1]:String(n)).toLowerCase().replace(/[^a-z0-9_-]+/g,'_').replace(/^[_-]+|[_-]+$/g,'')||'subject';
+  let y=m?+m[2]+1:new Date().getFullYear();while(SUBJ.some(x=>x.id===`${base}_${y}`))y++;return `${base}_${y}`}
+let AUTONAME='',AUTOOWNER='',ME='',SRCOWNER='';  // 自動で入れた案。人が書き換えていなければ、元の Subject を選び直したときに入れ直す
+let G=[],USED=new Set(),FIXED=new Set(),TPL=[],INFO={};
+// 名前から ID の案を作る（英数字だけ拾う。日本語だけの名前なら空のまま、人が入れる）
+const slug=s=>String(s).toLowerCase().normalize('NFKC').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const clone=x=>JSON.parse(JSON.stringify(x));
+
+// 名前の決まり（E-3。サーバーの subjects.NAME と同じ）を、入力しながら確かめる
+function nameProblems(n){
+  if(!n)return [];
+  const out=[];
+  if(/[A-Z]/.test(n))out.push('大文字は使えません。英字は小文字にしてください');
+  if(/[^A-Za-z0-9_-]/.test(n))out.push('使えるのは半角の英小文字・数字と、区切りの _ と - だけです（空白・全角・記号は使えません）');
+  if(!/_\d{4}$/.test(n)&&!/^\d{4}$/.test(n))out.push('末尾は _YYYY（年の4桁。例: _2027）にしてください');
+  if(/^[_-]|[_-]{2,}/.test(n))out.push('_ や - は、先頭に置いたり続けたりできません');
+  if(/^_?\d{4}$/.test(n))out.push('年の前に、名前の文字列を入れてください（例: edible_coffee_2027）');
+  if(SUBJ.some(x=>x.id===n))out.push('同じ名前の Subject がすでにあります');
+  return out;
+}
+function checkName(){const el=$('#name');if(!el)return;
+  const ps=nameProblems(el.value.trim());
+  $('#nameerr').innerHTML=ps.map(x=>'・'+esc(x)).join('<br>');
+  const ow=($('#owner')?.value||'').trim(),bad=ow&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ow);
+  if($('#ownererr'))$('#ownererr').innerHTML=bad?'・担当はメールアドレスで入れてください（例: name@example.com）':'';
+  $('#go').disabled=ps.length>0||!!bad}
+const goLabel=()=>S?'保存する':FROM?'複製して始める':CONTENT==='move'?'作って、中身を移し始める':'この Subject を始める';
+let KEEP={};  // 始め方を選び直しても、入力した名前などは残す
+function how(){
+  if(S)return;
+  $('#how').hidden=false;
+  const subSel=`<select id="howsub"><option value="">Subject を選ぶ</option>${SUBJ.map(x=>`<option value="${esc(x.id)}" ${x.id===SRCSUB?'selected':''}>${esc(x.title)}（${esc(x.id)}）</option>`).join('')}</select>`;
+  const tplSel=`<select id="howtpl">${TPL.map(t=>`<option value="${t.id}" ${t.id===TPLID?'selected':''}>${esc(t.label)} — ${esc(t.description)}</option>`).join('')}</select>`;
+  const o=(v,label,note,extra='')=>`<label class="opt"><input type="radio" name="pick" value="${v}" ${PICK===v?'checked':''}> <b>${label}</b>${PICK===v?extra:''}<small>${note}</small></label>`;
+  $('#how').innerHTML=`<h2>どう始めますか？</h2>
+   <div class="cards">
+     <button type="button" class="card ${PATH==='inherit'?'on':''}" data-path="inherit"><b>① 既存の Subject を引き継ぐ</b><span>前の Subject の中身を使って続ける。年度の切り替えや、構成の見直しに</span></button>
+     <button type="button" class="card ${PATH==='new'?'on':''}" data-path="new"><b>② 新しく一から始める</b><span>中身は空で始める。Facet の構成だけ決める</span></button>
+   </div>
+   ${PATH==='inherit'?`<div class="opts">
+     <div class="q">どの Subject を引き継ぎますか？</div>${subSel}
+     ${SRCSUB?`<div class="q">Facet の構成はどうしますか？</div>
+     ${o('same','同じ Facet で続ける','構成・中身・Discussion をそのまま複製します。Facet の構成は変えられません。年度の切り替えもこれ')}
+     ${o('move','Facet を組み直して、中身を移す','構成は自由に直せます。作ったあと、AI が新しい Facet ごとに一人 Discussion を立て、前の L1・L2・Discussion を読んで書き直します。人の確認は入れず「移行で作った」の印が付きます。Facet の数によっては数十分かかります')}`:''}
+   </div>`:''}
+   ${PATH==='new'?`<div class="opts"><div class="q">Facet の構成はどうしますか？</div>
+     ${o('own','自分で組む','空の構成から、グループと Facet を足していきます')}
+     ${o('subject','既存の Subject の構成を使う','構成だけ読み込みます（中身は空）。読み込んだあと自由に直せます',' '+subSel)}
+     ${o('tpl','雛形から選ぶ','読み込んだあと自由に直せます',' '+tplSel)}
+   </div>`:''}`;
+  // 道が決まるまで、下の欄は出さない
+  const ready=PATH==='inherit'?!!(SRCSUB&&PICK):PATH==='new'?!!PICK&&(PICK!=='subject'||SRCSUB):false;
+  for(const sec of document.querySelectorAll('main>section:not(#how)'))sec.hidden=!ready;
+}
+async function choose(){
+  for(const k of ['#name','#title','#desc','#owner'])if($(k))KEEP[k]=$(k).value;
+  SRCOWNER='';
+  if(PATH==='inherit'){SRC='subject';CONTENT=PICK==='move'?'move':PICK==='same'?'copy':'empty'}
+  else{SRC=PICK==='subject'?'subject':PICK==='tpl'?'tpl':'empty';CONTENT='empty'}
+  FROM=null;USED=new Set();FIXED=new Set();INFO={};
+  if(SRC==='empty')G=[];
+  else if(SRC==='tpl'){const t=TPL.find(x=>x.id===(TPLID||TPL[0]?.id));G=t?clone(t.groups):[]}
+  else if(SRCSUB){const got=await fetch(`/api/s/${encodeURIComponent(SRCSUB)}/facets`).then(r=>r.json());SRCOWNER=got.owner||'';
+    // 中身は空で構成だけ借りるときは、廃止の Facet は持ってこない（新しい Subject には中身が無いため）
+    G=CONTENT==='copy'?clone(got.groups):clone(got.groups).map(g=>({...g,groups:g.groups.map(s=>({...s,facets:s.facets.filter(f=>!f.deprecated)})).filter(s=>s.facets.length)})).filter(g=>g.groups.length);
+    if(CONTENT==='copy'){FROM=SRCSUB;INFO=got;USED=new Set(got.used);G.forEach(g=>g.groups.forEach(s=>s.facets.forEach(f=>FIXED.add(f.id))))}}
+  else G=[];
+  how();basic();render();
+}
+document.addEventListener('change',e=>{
+  if(e.target.name==='pick'){PICK=e.target.value;choose()}
+  else if(e.target.id==='howtpl'){TPLID=e.target.value;choose()}
+  else if(e.target.id==='howsub'){SRCSUB=e.target.value;choose()}
+});
+document.addEventListener('click',e=>{const c=e.target.closest('[data-path]');if(!c||PATH===c.dataset.path)return;
+  PATH=c.dataset.path;PICK='';choose()});
+function basic(){
+  $('#h').textContent=S?`Facet の構成を編集 — ${INFO.title||S}`:FROM?`既存の Subject を複製して続ける — ${INFO.title||FROM}`:'新しい Subject を作る';
+  $('#basic').innerHTML=S?`<h2>Subject</h2><div>${esc(INFO.title)} <span class="muted">${esc(S)}</span></div>`
+  :`<h2>Subject</h2>
+   <label class="f"><span>名前（フォルダ名。英小文字・数字の文字列_年。例: edible_coffee_2027）</span><input type="text" id="name" placeholder="new_brand_2027" autocomplete="off"></label><div class="err" id="nameerr" style="margin-top:-6px"></div>
+   <label class="f"><span>表示名</span><input type="text" id="title" placeholder="Bigtree Lab Coffee／新ブランド"></label>
+   <label class="f"><span>説明（1〜2行）</span><textarea id="desc"></textarea></label>
+   <label class="f"><span>担当（メールアドレス。${PATH==='inherit'?'元の Subject の担当が入っています。担当が替わるならここで入れ替える':'ふつうは自分。ほかの人の Subject を作るならその人'}）</span><input type="text" id="owner" autocomplete="off"></label><div class="err" id="ownererr" style="margin-top:-6px"></div>
+   ${FROM?`<p class="muted">${esc(FROM)} のファイル（Facet・Discussion・原典）を1つずつコピーして始めます。${esc(FROM)} はそのまま残ります（年度の切り替えなら、その年の FIX になります）。Discussion の番号は続きから付きます。</p>`:''}`;
+  // 名前の案は、既存の Subject を元にするとき（①-1・①-2・②-2）に入れる。人が書いた名前は上書きしない
+  if(SRC==='subject'&&SRCSUB&&(!KEEP['#name']||KEEP['#name']===AUTONAME)){AUTONAME=nextName(SRCSUB);KEEP['#name']=AUTONAME}
+  // 担当の案: 引き継ぐなら元の担当、一からなら自分。人が書き換えた担当は上書きしない
+  const od=PATH==='inherit'?(SRCOWNER||ME):ME;
+  if(!KEEP['#owner']||KEEP['#owner']===AUTOOWNER){AUTOOWNER=od;KEEP['#owner']=od}
+  if(FROM){$('#name').value=KEEP['#name']||nextName(FROM);$('#title').value=INFO.title||'';$('#desc').value=INFO.description||'';$('#owner').value=KEEP['#owner']}
+  else for(const [k,v] of Object.entries(KEEP))if($(k))$(k).value=v;
+  if(SRC!=='subject'&&KEEP['#name']===AUTONAME&&AUTONAME){$('#name').value='';KEEP['#name']='';AUTONAME=''}  // 既存を使わない道に変えたら、自動の案は消す
+  $('#go').textContent=goLabel();
+  $('#edithint').textContent=S&&!RO()?'まだ始まっていない（Discussion も中身も無い）ので、自由に直せます。最初の Discussion を始めると、構成は変えられなくなります。':'';
+  if(S&&RO())$('#go').style.display='none';
+  document.querySelectorAll('#basic input,#basic textarea').forEach(e=>e.oninput=preview);
+  if($('#name')){$('#name').addEventListener('input',checkName);checkName()}
+  if($('#owner')){$('#owner').addEventListener('input',checkName);checkName()}
+}
+
+// 始めたあと（Discussion か中身がある）と「次の年を始める」は、構成を変えない（D-5 2026-11-22）。見るだけにする
+const RO=()=>FROM||(S&&(INFO.locked||INFO.readonly));
+function render(){
+  for(const id of ['#tplrow','#addgroup','#howto'])$(id).style.display=RO()?'none':'';
+  if(!S)$('#tplrow').style.display='none';  // 新しく作るときは、上の「始め方」で選ぶ
+  if(RO()){$('#tree').innerHTML=`<p class="muted">${FROM?'複製して続けるので、Facet の構成は元の Subject のものをそのまま引き継ぎます。':INFO.readonly?'この Subject は Drive で閲覧のみになっているため、Facet の構成は変えられません。':'この Subject は始まっているので、Facet の構成は変えられません。'}
+    組み直したいときは、<a href="subject-edit.html">新しい Subject を作って</a>、1から埋めてください。構成が変わると、要約・L1・L2 のすべてを合わせ直す必要が出るためです。いまの構成は下の「最終確認」にあります。</p>`;
+    preview();return}
+  $('#tree').innerHTML=G.map((g,gi)=>`<div class="group" data-drop="${gi}" data-kind="g">
+    <div class="row"><span class="grip" draggable="true" data-grip="${gi}" data-kind="g" title="つかんで動かす">⋮⋮</span><input type="text" class="name" data-p="${gi}" data-k="label" value="${esc(g.label)}" placeholder="グループの名前（例: 競合）">
+      <input type="text" class="id" data-p="${gi}" data-k="id" value="${esc(g.id)}" placeholder="id">
+      <span class="tools">${mv(gi)}<button data-del="${gi}" title="消す">✕</button></span></div>
+    ${g.groups.map((s,si)=>`<div class="sub" data-drop="${gi}.${si}" data-kind="s">
+      <div class="row"><span class="grip" draggable="true" data-grip="${gi}.${si}" data-kind="s" title="つかんで動かす">⋮⋮</span><input type="text" class="name" data-p="${gi}.${si}" data-k="label" value="${esc(s.label)}" placeholder="小グループの名前（例: 競合A）">
+        <input type="text" class="id" data-p="${gi}.${si}" data-k="id" value="${esc(s.id)}" placeholder="id">
+        <span class="tools">${mv(gi+'.'+si)}<button data-del="${gi}.${si}" title="消す">✕</button></span></div>
+      ${s.facets.map((f,fi)=>{const p=`${gi}.${si}.${fi}`,used=USED.has(f.id)&&FIXED.has(f.id);
+        return `<div class="facet${f.deprecated?' dep':''}" data-drop="${p}" data-kind="f"><span class="grip" draggable="true" data-grip="${p}" data-kind="f" title="つかんで動かす">⋮⋮</span><input type="text" data-p="${p}" data-k="label" value="${esc(f.label)}" placeholder="Facet の名前">
+        <input type="text" data-p="${p}" data-k="id" value="${esc(f.id)}" placeholder="facet-id" ${FIXED.has(f.id)?'readonly title="始めたあとは ID を変えられません"':''}>
+        <span class="tools">${mv(p)}${used?`<label class="muted"><input type="checkbox" data-dep="${p}" ${f.deprecated?'checked':''}> 使わない</label>`
+          :`<button data-del="${p}" title="消す">✕</button>`}</span></div>`}).join('')}
+      <div class="adds"><button data-add="${gi}.${si}">＋ Facet</button></div></div>`).join('')}
+    <div class="adds"><button data-add="${gi}">＋ 小グループ</button></div></div>`).join('')
+    ||'<p class="muted">まだ空です。雛形を読み込むか、グループを足してください。</p>';
+  preview();
+}
+// ---- ドラッグで並べ替え。グループ・小グループ・Facet。Facet は別の小グループへ、小グループは別のグループへも移せる ----
+let DRAG=null;  // {path, kind}
+const obj=p=>{const [arr,i]=at(p);return arr[i]};
+const parentArr=(kind,p)=>kind==='g'?G:kind==='s'?G[+p.split('.')[0]].groups:obj(p.split('.').slice(0,2).join('.')).facets;
+function dropAt(e){  // いまの位置で落とすと、どこに入るか: {arr, ref, after} か null
+  if(!DRAG)return null;
+  for(let el=e.target.closest('[data-drop]');el;el=el.parentElement.closest('[data-drop]')){const d=dropOn(e,el);if(d)return d}
+  return null;
+}
+function dropOn(e,el){
+  const k=el.dataset.kind,p=el.dataset.drop;
+  if(k===DRAG.kind){if(p===DRAG.path||p.startsWith(DRAG.path+'.'))return null;
+    const r=el.getBoundingClientRect(),after=e.clientY>r.top+Math.min(r.height,40)/2;
+    return {el,arr:parentArr(k,p),ref:obj(p),after,cls:after?'drop-after':'drop-before'}}
+  // 入れ物の上に落とす: Facet → 小グループの末尾、小グループ → グループの末尾
+  if((DRAG.kind==='f'&&k==='s')||(DRAG.kind==='s'&&k==='g')){const o=obj(p);return {el,arr:DRAG.kind==='f'?o.facets:o.groups,ref:null,cls:'drop-in'}}
+  return null;
+}
+const clearMarks=()=>document.querySelectorAll('.drop-before,.drop-after,.drop-in,.dragging').forEach(x=>x.classList.remove('drop-before','drop-after','drop-in','dragging'));
+document.addEventListener('dragstart',e=>{const g=e.target.closest?.('[data-grip]');if(!g)return;
+  DRAG={path:g.dataset.grip,kind:g.dataset.kind};e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',DRAG.path);
+  const row=g.closest('[data-drop]');e.dataTransfer.setDragImage(row,10,10);setTimeout(()=>row.classList.add('dragging'))});
+document.addEventListener('dragover',e=>{const d=dropAt(e);clearMarks();if(DRAG)document.querySelector(`[data-drop="${DRAG.path}"]`)?.classList.add('dragging');
+  if(!d)return;e.preventDefault();e.stopPropagation();d.el.classList.add(d.cls)});
+document.addEventListener('drop',e=>{const d=dropAt(e);clearMarks();if(!d)return;e.preventDefault();
+  const [sarr,si]=at(DRAG.path),item=sarr[si];sarr.splice(si,1);
+  if(d.ref){const j=d.arr.indexOf(d.ref);d.arr.splice(j+(d.after?1:0),0,item)}else d.arr.push(item);
+  DRAG=null;render()});
+document.addEventListener('dragend',()=>{DRAG=null;clearMarks()});
+const mv=p=>`<button data-up="${p}" title="上へ">↑</button><button data-down="${p}" title="下へ">↓</button>`;
+// "1.0.2" → [親の配列, 位置]
+function at(p){const k=p.split('.').map(Number);let arr=G;
+  if(k.length>1)arr=G[k[0]].groups;if(k.length>2)arr=G[k[0]].groups[k[1]].facets;return [arr,k[k.length-1]]}
+
+function preview(){
+  const n=G.reduce((a,g)=>a+g.groups.reduce((b,s)=>b+s.facets.length,0),0);
+  $('#preview').textContent=G.map(g=>`■ ${g.label}\n`+g.groups.map(s=>`  ${s.label}: `+s.facets.map(f=>f.label+(f.deprecated?'（使わない）':'')).join('・')).join('\n')).join('\n')||'（空）';
+  $('#count').textContent=`グループ ${G.length}・Facet ${n}`;
+}
+
+document.addEventListener('input',e=>{const p=e.target.dataset.p;if(p==null)return;const [arr,i]=at(p),x=arr[i],k=e.target.dataset.k;
+  x[k]=e.target.value;
+  if(k==='label'&&x._auto!==false&&!FIXED.has(x.id)){const s=slug(e.target.value);if(s){x.id=s;const idEl=e.target.parentElement.querySelector('[data-k=id]');if(idEl)idEl.value=s}}
+  if(k==='id')x._auto=false;
+  preview()});
+document.addEventListener('change',e=>{const p=e.target.dataset.dep;if(p==null)return;const [arr,i]=at(p);arr[i].deprecated=e.target.checked;render()});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.add!=null){if(d.add==='group')G.push({id:'',label:'',groups:[{id:'',label:'',facets:[{id:'',label:''}]}]});
+    else{const k=d.add.split('.').map(Number);
+      if(k.length===1)G[k[0]].groups.push({id:'',label:'',facets:[{id:'',label:''}]});
+      else G[k[0]].groups[k[1]].facets.push({id:'',label:''});}
+    render();return}
+  for(const [key,dir] of [['up',-1],['down',1]])if(d[key]!=null){const [arr,i]=at(d[key]),j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];render();return}
+  if(d.del!=null){const [arr,i]=at(d.del);
+    const has=JSON.stringify(arr[i]).match(/"id":"([^"]+)"/g)?.some(m=>{const id=m.slice(6,-1);return USED.has(id)&&FIXED.has(id)});
+    if(has){ui.alert('L1・L2 のある Facet を含むので消せません。その Facet は「使わない」にしてください。',{title:'消せません'});return}
+    arr.splice(i,1);render();return}
+});
+$('#load').onclick=async()=>{const t=TPL.find(x=>x.id===$('#tpl').value);if(!t)return;
+  if(G.length&&!await ui.confirm('いまの構成は消えて、雛形の構成になります。',{title:`「${t.label}」の雛形で置き換えますか？`,ok:'置き換える',danger:true}))return;
+  // 構成を直せるのは始める前だけ（D-5）なので、いまの構成をそのまま雛形で置き換える
+  G=clone(t.groups);FIXED=new Set();
+  render()};
+$('#go').onclick=async()=>{
+  $('#err').textContent='';
+  const groups=G.map(g=>({id:g.id,label:g.label,groups:g.groups.map(s=>({id:s.id,label:s.label,facets:s.facets.map(f=>({id:f.id,label:f.label,...(f.deprecated?{deprecated:true}:{})}))}))}));
+  if(!S&&CONTENT==='move'&&!SRCSUB){$('#err').textContent='移す元の Subject を選んでください';return}
+  const nm=S||$('#name').value.trim();
+  const [ttl,lead,okl]=S?['この構成で保存しますか？','','保存する']
+    :CONTENT==='move'?[`${nm} を作って、中身を移しますか？`,`${SRCSUB} の中身を、AI が新しい Facet ごとに移します。数十分かかることがあります。\n\n`,'作って移し始める']
+    :FROM?[`${FROM} を複製して、${nm} を始めますか？`,'同じ構成で続けます。ファイルの数によっては数分かかります。\n\n','複製して始める']
+    :[`${nm} を始めますか？`,'','始める'];
+  if(!await ui.confirm(lead+$('#preview').textContent,{title:ttl,ok:okl}))return;
+  $('#go').disabled=true;$('#go').textContent=S?'保存しています…':FROM?'ファイルをコピーしています…（数分かかることがあります）':'共有ドライブに作っています…';
+  try{
+    const r=S?await fetch(`/api/s/${encodeURIComponent(S)}/facets`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({groups})})
+      :await fetch('/api/subjects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('#name').value.trim(),title:$('#title').value.trim(),description:$('#desc').value.trim(),groups,owner:($('#owner')?.value||'').trim(),...(FROM?{from:FROM}:{}),...(CONTENT==='move'&&SRCSUB?{migrate_from:SRCSUB}:{})})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(j.detail||j.error||r.statusText);
+    location.href='index.html?s='+encodeURIComponent(S||j.subject);
+  }catch(err){$('#err').textContent=err.message;$('#go').disabled=false;$('#go').textContent=goLabel()}
+};
+
+(async()=>{
+  // 読み終わるまでは「読み込んでいます」だけを出す（以前は空の欄が数秒見えた）。3つは並べて読む
+  const [tpl,subj,me]=await Promise.all([fetch('/api/templates').then(r=>r.json()),
+    S?[]:fetch('/api/subjects').then(r=>r.json()).catch(()=>[]),
+    S?{}:fetch('/api/me').then(r=>r.json()).catch(()=>({}))]);
+  TPL=tpl;
+  $('#tpl').innerHTML=TPL.map(t=>`<option value="${t.id}">${esc(t.label)} — ${esc(t.description)}</option>`).join('');
+  if(S){INFO=await fetch(`/api/s/${encodeURIComponent(S)}/facets`).then(r=>r.json());
+    G=clone(INFO.groups);USED=new Set(INFO.used);G.forEach(g=>g.groups.forEach(s=>s.facets.forEach(f=>FIXED.add(f.id))));
+    basic();render();$('#loading').remove();document.querySelectorAll('main>section:not(#how)').forEach(x=>x.hidden=false);return}
+  SUBJ=subj;ME=me.email||'';
+  await choose();
+  $('#loading').remove();
+  // 一覧は写しを先に使い、ドライブと照らし合わせた一覧が届いたら差し替える（同じ名前の確かめに使う）
+  fetch('/api/subjects?fresh=1').then(r=>r.json()).then(x=>{if(Array.isArray(x)){SUBJ=x;checkName()}}).catch(()=>{});
+})();
+</script></body></html>

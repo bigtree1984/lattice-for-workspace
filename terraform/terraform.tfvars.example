@@ -1,0 +1,7 @@
+# コピーして terraform.tfvars にし、会社の値に書き換える
+project_id     = "example-lattice"
+allowed_domain = "example.co.jp"
+
+# 手作業で作ったあとに入れる（README の手順 4・5）
+drive_id       = ""
+sandbox_engine = ""

@@ -1,0 +1,94 @@
+/* M1.5 のウォークスルー用の画面。色は tokens.css の役だけを使う */
+.wzprimary{background:var(--color-contrast-a);color:var(--color-base);border-color:var(--color-contrast-a)}
+.wzprimary.big{display:block;width:100%;margin-top:12px;padding:8px}
+.wzsmall{font-size:11px;padding:0 6px;margin-left:6px}
+.wzbox{border:1px solid var(--line);border-top:3px solid var(--color-contrast-a);padding:10px;margin-bottom:16px;max-width:1000px}
+.wzhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.wztable{border-collapse:collapse;width:100%}.wztable td{border-top:1px solid var(--line);padding:4px 6px;cursor:pointer}
+.wzrow:hover td{background:var(--color-surface)}
+.wzst{font-size:11px;border:1px solid var(--color-muted);padding:0 5px}
+.wzst.review{border-color:var(--color-accent);color:var(--color-accent)}.wzst.closed{background:var(--color-surface)}
+.wzalert{color:var(--color-accent);font-size:12px}
+.wzedits{margin:2px 0;font-size:12px}
+#panel>.wzprimary{margin-bottom:8px}
+/* 見出しの高さは中身で変わるので、固定の高さを引かずに、見出しの下から画面の下までに貼り付ける（ウォークスルーの指摘: 入力欄が見えない） */
+#chat{display:none;position:fixed;left:0;right:0;bottom:0;top:var(--hh,42px)}
+#chat .left,#chat .right{min-height:0}
+#chat .col{overflow:auto;padding:12px}
+#chat .left{flex:1;display:flex;flex-direction:column;border-right:2px solid var(--line);padding:0}
+#chat .right{width:44%;min-width:340px}
+#chat .bar{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--color-surface)}
+#chat .msgs{flex:1;overflow:auto;padding:12px}
+.msg{max-width:80%;margin:8px 0;padding:8px 10px;border:1px solid var(--line)}
+.msg.user{margin-left:auto;background:var(--color-surface)}
+.msg .who{font-size:11px;color:var(--color-muted);margin-bottom:2px}
+.msg.wait{color:var(--color-muted);font-style:italic}
+#chat .input{border-top:1px solid var(--line);padding:8px 12px}
+#chat textarea{width:100%;font:inherit}
+#chat .btns{display:flex;gap:8px;margin-top:6px}
+#chat h3{font-size:13px;margin:12px 0 6px;padding:2px 6px;background:var(--color-surface)}
+.cand{border-top:1px dotted var(--line);padding:6px 0}.cand .opts{display:flex;gap:12px;font-size:12px;margin-top:2px}
+.add{margin-top:8px;font-size:12px}
+#wzmodal,#wzedit{display:none;position:fixed;inset:0;background:rgb(0 0 0/.35);z-index:50;align-items:center;justify-content:center}
+.dlg{background:var(--color-base);width:min(1500px,97vw);height:88vh;display:flex;flex-direction:column;border:1px solid var(--color-muted)}
+.dlg.small{width:min(760px,96vw);height:70vh}
+.dhead{display:flex;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}.dhead .muted{flex:1}
+.tabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid var(--line)}
+/* いま開いているタブは、上の太い色の線と、下の線を消して本文とつなげることで示す（ウォークスルーの指摘） */
+.tab{border-bottom:none;border-top:3px solid transparent;margin-bottom:-1px;color:var(--color-muted)}
+.tab.on{background:var(--color-base);color:var(--color-ink);font-weight:bold;border-top-color:var(--color-contrast-a);border-left-color:var(--line);border-right-color:var(--line);position:relative;z-index:1}.tab.approved{color:var(--color-contrast-a)}.tab.withdrawn{color:var(--color-muted)}
+.dbody{flex:1;overflow:auto;padding:12px}
+.dbody>textarea,#wzetext{width:100%;height:calc(100% - 40px);font:13px/1.6 monospace}
+.pair{margin-bottom:16px}.ph{font-weight:bold;margin-bottom:4px}
+.pair .cols{display:flex;gap:12px}.pair .o,.pair .n{flex:1;border:1px solid var(--line);padding:6px 8px;min-height:160px}
+.pair .o{background:var(--color-surface)}.pair .o.new{background:var(--color-base);border-color:var(--color-contrast-a)}.pair .lab{font-size:11px;color:var(--color-muted);margin-bottom:4px}
+.pair textarea{width:100%;height:100%;min-height:260px;font:12px/1.6 monospace}
+.dfoot{display:flex;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line)}
+.pair mark{background:color-mix(in srgb,var(--color-contrast-a) 22%,var(--color-base));color:inherit}
+.pair del{color:var(--color-muted);text-decoration-color:var(--color-accent)}
+.tab.marked{color:var(--color-ink)}
+#wzfinal[disabled]{opacity:.5;cursor:not-allowed}
+
+/* 渡した資料（C-14） */
+.msg.file{background:none;border:0;padding:2px 0;font-size:.92em;max-width:none}
+
+/* 待ち時間の宝石（gem.js） */
+lattice-gem{display:inline-block;width:28px;height:28px;vertical-align:-8px;margin-right:10px;flex:none}
+lattice-gem canvas{width:100%;height:100%;display:block}
+.msg.wait{display:flex;align-items:center}
+.elapsed{font-style:normal;font-variant-numeric:tabular-nums;color:var(--color-muted)}
+label.keep{display:block;margin:4px 0;line-height:1.5}
+#wzbusy{position:fixed;inset:0;background:color-mix(in srgb,var(--color-base) 80%,transparent);display:flex;align-items:center;justify-content:center;z-index:100}
+#wzbusy>div{border:1px solid var(--line);background:var(--color-base);padding:20px 28px}
+.wzrewind summary{cursor:pointer}
+/* 狭い画面（ノート PC の半分の幅・タブレット）: チャットと要約を縦に並べ、確認の画面の新旧も縦に並べる */
+@media (max-width:900px){
+  #chat{flex-direction:column;overflow:auto}
+  #chat .left{flex:none;height:calc(100vh - var(--hh,42px));border-right:0;border-bottom:2px solid var(--line)}
+  #chat .right{width:auto;min-width:0;overflow:visible;flex:none}
+  #chat .bar{flex-wrap:wrap}
+  .msg{max-width:92%}
+  .pair .cols{flex-direction:column}
+  .dlg,.dlg.small{width:100vw;height:100vh}
+  .dhead,.dfoot{flex-wrap:wrap}
+}
+/* 待ち時間に流す、AI とアプリのやりとり（退屈しのぎ） */
+.feed{margin:4px 0 8px 38px;font-size:11.5px;line-height:1.55;color:var(--color-muted);font-style:normal;max-width:80%;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 40%);mask-image:linear-gradient(to bottom,transparent,#000 40%)}
+.feed .fl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed .fl.last{color:var(--color-ink);white-space:normal}
+.feed .fl.think{font-style:italic}
+.feed .fl.err{color:var(--color-accent)}
+.feed .fi{display:inline-block;width:1.6em;text-align:center}
+.feed .fl.last.think::after{content:'▍';animation:fblink 1s steps(1) infinite}
+@keyframes fblink{50%{opacity:0}}
+/* AI の返事の中身が吹き出しからはみ出さないように（コードの枠・長い1行・表） */
+.msg{min-width:0;overflow-wrap:anywhere}
+.md pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
+.md table{display:block;overflow-x:auto;max-width:100%}
+.md img{max-width:100%}
+
+/* Drive で閲覧のみの Subject（REQUIREMENTS E-4）: 書き込む操作を隠す。サーバーでも断る */
+.ro #wznew,.ro [data-wzcont],.ro [data-wzfacet],.ro [data-wzedit],.ro .wzrewind,.ro #chat .input,.ro #wzundo,.ro #wzdiscard,.ro #wzdiscard2,
+.ro #chat .add,.ro #wzconfirm,.ro #wzfinal,.ro #wzbackdisc,.ro #editfacets,.ro #setowner{display:none!important}
+.wzro{border:1px solid var(--color-muted);padding:6px 10px;margin-bottom:12px;max-width:1000px;font-size:13px}

@@ -1,0 +1,6 @@
+# Cloud Build に送るのは Dockerfile・requirements.txt・app だけ
+*
+!Dockerfile
+!requirements.txt
+!app/
+app/**/__pycache__/

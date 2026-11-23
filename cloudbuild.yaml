@@ -1,0 +1,8 @@
+# イメージを作る（gcloud builds submit --config=cloudbuild.yaml --substitutions=_IMAGE=<置き場>/app:<版>）
+# ログは Cloud Logging だけに出す（ログ用のバケットを作る権限を、作る身分 lattice-build に持たせないため）
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_IMAGE}", "."]
+images: ["${_IMAGE}"]
+options:
+  logging: CLOUD_LOGGING_ONLY

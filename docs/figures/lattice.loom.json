@@ -1,0 +1,522 @@
+{
+ "version": 2,
+ "architecture": {
+  "columns": [
+   {
+    "id": "people",
+    "label": "利用者"
+   },
+   {
+    "id": "screen",
+    "label": "ブラウザ"
+   },
+   {
+    "id": "app",
+    "label": "Google Cloud（Lattice）",
+    "width": 2
+   },
+   {
+    "id": "ai",
+    "label": "AI（Agent Platform）"
+   },
+   {
+    "id": "ws",
+    "label": "Google Workspace"
+   }
+  ],
+  "nodes": [
+   {
+    "id": "user",
+    "label": "利用者\n（会社のアカウント）",
+    "type": "human",
+    "group": "people"
+   },
+   {
+    "id": "chrome",
+    "label": "Lattice の画面\n（Chrome）",
+    "type": "frontend",
+    "group": "screen",
+    "icon": "googlechrome"
+   },
+   {
+    "id": "run",
+    "label": "Cloud Run\nlattice",
+    "type": "backend",
+    "group": "app",
+    "icon": "gcp-cloud-run"
+   },
+   {
+    "id": "firestore",
+    "label": "Firestore\n作業の途中の状態",
+    "type": "storage",
+    "group": "app",
+    "icon": "gcp-firestore"
+   },
+   {
+    "id": "secret",
+    "label": "Secret Manager\nOAuth・鍵",
+    "type": "storage",
+    "group": "app",
+    "icon": "gcp-secret-manager"
+   },
+   {
+    "id": "logging",
+    "label": "Cloud Logging",
+    "type": "storage",
+    "group": "app",
+    "icon": "gcp-cloud-logging"
+   },
+   {
+    "id": "gemini",
+    "label": "Gemini\n（global）",
+    "type": "agent",
+    "group": "ai",
+    "icon": "gcp-vertexai"
+   },
+   {
+    "id": "websearch",
+    "label": "Web Grounding\nfor Enterprise",
+    "type": "backend",
+    "group": "ai"
+   },
+   {
+    "id": "sandbox",
+    "label": "サンドボックス\n（計算・遮断）",
+    "type": "backend",
+    "group": "ai"
+   },
+   {
+    "id": "login",
+    "label": "Google ログイン\n（OAuth・内部）",
+    "type": "backend",
+    "group": "ws",
+    "icon": "google"
+   },
+   {
+    "id": "drive",
+    "label": "共有ドライブ\nSubject の .md",
+    "type": "storage",
+    "group": "ws"
+   }
+  ],
+  "edges": [
+   {
+    "from": "user",
+    "to": "chrome",
+    "label": "操作"
+   },
+   {
+    "from": "chrome",
+    "to": "run",
+    "label": "画面と API",
+    "bidirectional": true
+   },
+   {
+    "from": "chrome",
+    "to": "login",
+    "label": "ログイン",
+    "bidirectional": true
+   },
+   {
+    "from": "run",
+    "to": "secret",
+    "label": "鍵を読む"
+   },
+   {
+    "from": "run",
+    "to": "firestore",
+    "label": "途中の状態",
+    "bidirectional": true
+   },
+   {
+    "from": "run",
+    "to": "logging",
+    "label": "ログ"
+   },
+   {
+    "from": "run",
+    "to": "drive",
+    "label": "本人の権限で読み書き",
+    "bidirectional": true
+   },
+   {
+    "from": "run",
+    "to": "gemini",
+    "label": "会話・下書き",
+    "bidirectional": true
+   },
+   {
+    "from": "gemini",
+    "to": "websearch",
+    "label": "Web 検索",
+    "bidirectional": true
+   },
+   {
+    "from": "run",
+    "to": "sandbox",
+    "label": "計算",
+    "bidirectional": true
+   }
+  ]
+ },
+ "artifacts": [
+  {
+   "id": "login_req",
+   "label": "ログインの依頼",
+   "transient": true
+  },
+  {
+   "id": "token",
+   "label": "アクセストークン\n（1時間）"
+  },
+  {
+   "id": "facets",
+   "label": "L1・L2（いまの版）",
+   "at": "drive"
+  },
+  {
+   "id": "msg",
+   "label": "発言"
+  },
+  {
+   "id": "prompt",
+   "label": "発言＋読んだファイル"
+  },
+  {
+   "id": "reply",
+   "label": "AI の返事"
+  },
+  {
+   "id": "work",
+   "label": "会話の記録"
+  },
+  {
+   "id": "summary",
+   "label": "要約と Facet の候補"
+  },
+  {
+   "id": "drafts",
+   "label": "L1・L2 の下書き"
+  },
+  {
+   "id": "approval",
+   "label": "承認",
+   "transient": true
+  },
+  {
+   "id": "final",
+   "label": "L1・L2（確定版）"
+  },
+  {
+   "id": "manifest",
+   "label": "巻き戻しの目録"
+  }
+ ],
+ "flow": {
+  "tasks": [
+   {
+    "id": "t1",
+    "label": "ログインする",
+    "description": "会社の Google アカウントでログインする。アプリはドメインを確かめ、1時間のアクセストークンを暗号化した Cookie に入れる（サーバーには保存しない）。",
+    "mainNode": "user",
+    "inputNodes": [],
+    "outputNodes": [],
+    "actions": [
+     {
+      "type": "create",
+      "results": [
+       "login_req"
+      ],
+      "label": "会社のアカウントでログイン"
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "login_req"
+      ],
+      "to": "login"
+     }
+    ]
+   },
+   {
+    "id": "t2",
+    "label": "トークンを受け取る",
+    "description": "Google が本人を確かめ、ドライブを読み書きできるアクセストークンを返す。Lattice はそれを暗号化した Cookie として画面に持たせる。",
+    "mainNode": "chrome",
+    "inputNodes": [],
+    "outputNodes": [],
+    "actions": [
+     {
+      "type": "receive",
+      "artifacts": [
+       "token"
+      ],
+      "from": "login",
+      "label": "Google からトークンを受け取る"
+     }
+    ]
+   },
+   {
+    "id": "t3",
+    "label": "発言する",
+    "description": "利用者が Discussion で発言する。トークンと一緒に Cloud Run に届く。",
+    "mainNode": "user",
+    "inputNodes": [],
+    "outputNodes": [],
+    "actions": [
+     {
+      "type": "create",
+      "results": [
+       "msg"
+      ]
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "msg"
+      ],
+      "to": "run"
+     }
+    ]
+   },
+   {
+    "id": "t4",
+    "label": "AI が返事を作る",
+    "description": "Cloud Run が裏のスレッドで、関係する L1・L2 を利用者の権限でドライブから読み、発言と一緒に Gemini に渡す。必要なら Web 検索や計算も使う。会話の記録は Firestore に置く。",
+    "mainNode": "run",
+    "inputNodes": [],
+    "outputNodes": [],
+    "actions": [
+     {
+      "type": "receive",
+      "artifacts": [
+       "facets"
+      ],
+      "from": "drive",
+      "keep": true,
+      "label": "利用者の権限で L1・L2 を読む"
+     },
+     {
+      "type": "transform",
+      "artifacts": [
+       "msg"
+      ],
+      "results": [
+       "prompt"
+      ],
+      "label": "発言と読んだファイルをまとめる"
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "prompt"
+      ],
+      "to": "gemini"
+     },
+     {
+      "type": "receive",
+      "artifacts": [
+       "reply"
+      ],
+      "from": "gemini"
+     },
+     {
+      "type": "create",
+      "results": [
+       "work"
+      ],
+      "label": "会話の記録を作る"
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "work"
+      ],
+      "to": "firestore"
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "reply"
+      ],
+      "to": "chrome",
+      "label": "返事を画面に出す"
+     }
+    ]
+   },
+   {
+    "id": "t5",
+    "label": "要約と下書き",
+    "description": "要約を作り、更新する Facet を選んで「確認する」を押すと、AI が要約と L1・L2 の下書きを書き、ドライブに置く。",
+    "mainNode": "run",
+    "inputNodes": [],
+    "outputNodes": [],
+    "actions": [
+     {
+      "type": "receive",
+      "artifacts": [
+       "work"
+      ],
+      "from": "firestore",
+      "keep": true,
+      "label": "会話の記録を読む"
+     },
+     {
+      "type": "receive",
+      "artifacts": [
+       "summary"
+      ],
+      "from": "gemini",
+      "label": "Gemini が要約を書く"
+     },
+     {
+      "type": "receive",
+      "artifacts": [
+       "drafts"
+      ],
+      "from": "gemini",
+      "label": "Gemini が下書きを書く"
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "summary",
+       "drafts"
+      ],
+      "to": "drive",
+      "label": "要約と下書きをドライブに置く"
+     }
+    ]
+   },
+   {
+    "id": "t6",
+    "label": "新旧を見比べて承認",
+    "description": "利用者が、いまの版と下書きを並べて見る。直したければ直し、Facet ごとに承認か取り下げを選んで確定する。",
+    "mainNode": "user",
+    "inputNodes": [],
+    "outputNodes": [],
+    "actions": [
+     {
+      "type": "receive",
+      "artifacts": [
+       "drafts"
+      ],
+      "from": "drive",
+      "keep": true,
+      "label": "新旧を並べて見る"
+     },
+     {
+      "type": "inspect",
+      "artifacts": [
+       "drafts"
+      ],
+      "label": "承認か取り下げを選ぶ"
+     },
+     {
+      "type": "create",
+      "results": [
+       "approval"
+      ]
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "approval"
+      ],
+      "to": "run"
+     }
+    ]
+   },
+   {
+    "id": "t7",
+    "label": "確定する",
+    "description": "下書きを確定版にし、log.md に記録し、巻き戻し用の目録（ファイルの ID と版の番号だけ）を書く。会話の記録は Firestore から消す。",
+    "mainNode": "run",
+    "inputNodes": [],
+    "outputNodes": [],
+    "actions": [
+     {
+      "type": "receive",
+      "artifacts": [
+       "drafts"
+      ],
+      "from": "drive",
+      "label": "下書きを読む"
+     },
+     {
+      "type": "transform",
+      "artifacts": [
+       "drafts"
+      ],
+      "results": [
+       "final"
+      ],
+      "label": "確定版にする"
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "final"
+      ],
+      "to": "drive"
+     },
+     {
+      "type": "create",
+      "results": [
+       "manifest"
+      ],
+      "label": "巻き戻しの目録を作る"
+     },
+     {
+      "type": "send",
+      "artifacts": [
+       "manifest"
+      ],
+      "to": "drive"
+     },
+     {
+      "type": "receive",
+      "artifacts": [
+       "work"
+      ],
+      "from": "firestore",
+      "label": "会話の記録を引き取る"
+     },
+     {
+      "type": "discard",
+      "artifacts": [
+       "work"
+      ],
+      "label": "会話の記録を消す"
+     }
+    ]
+   }
+  ],
+  "connections": [
+   {
+    "from": "t1",
+    "to": "t2"
+   },
+   {
+    "from": "t2",
+    "to": "t3"
+   },
+   {
+    "from": "t3",
+    "to": "t4"
+   },
+   {
+    "from": "t4",
+    "to": "t5"
+   },
+   {
+    "from": "t5",
+    "to": "t6"
+   },
+   {
+    "from": "t6",
+    "to": "t7"
+   }
+  ]
+ }
+}

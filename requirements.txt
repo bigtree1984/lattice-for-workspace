@@ -1,0 +1,15 @@
+# Cloud Run のコンテナに入れるもの（手元の .venv と同じ版）
+fastapi==0.162.0
+uvicorn==0.54.0
+cryptography==50.0.2
+google-auth==2.62.1
+google-auth-httplib2==0.4.4
+httplib2==0.32.1
+google-api-python-client==2.201.0
+google-cloud-firestore==2.34.1
+google-cloud-aiplatform==2.7.0
+google-genai==2.34.0
+httpx==0.28.1
+requests==2.34.2
+PyYAML==6.0.3
+openpyxl==3.1.5
