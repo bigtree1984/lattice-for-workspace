@@ -3,6 +3,8 @@
 共有ドライブの上で、テーマ（Subject）ごとの知識を AI（Gemini）との対話（Discussion）で育てていく Web アプリです。
 話した内容は要約と下書きになり、人が承認すると共有ドライブの Markdown として確定します。
 
+▶ 紹介動画（約9分）: https://youtu.be/rSpoX1VJXSM
+
 - データ（文書・資料）はすべて会社の**共有ドライブ**に置かれ、アプリは**利用者本人の権限**で読み書きします
 - AI は Vertex AI の Gemini。表計算などは、ネットワークに出られないサンドボックスで行います
 - Google Cloud の Cloud Run で動きます。ログインは会社の Google Workspace のアカウントだけ
